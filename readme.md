@@ -24,13 +24,14 @@ neighbourhood consists of just {middle,down,right}.
 Images are input and output as raw binary gray-scale
 images, with no header. The processing parameters are
 set on the command line as "width height [bits] [levels]":
-    - Width: positive integer, up to and including 2^24
-    - Height: positive integer, up to and including 2^24
-    - Bits: a binary power <=32, default=8
-    - Levels: number of times to erode before dilating (or vice-versa),
-        - 0 <= abs(levels) <= min(width/4, height/4, 64) 
-        - default=1,
-        - negative values are open, positive values are close
+
+- Width: positive integer, up to and including 2^24
+- Height: positive integer, up to and including 2^24
+- Bits: a binary power <=32, default=8
+- Levels: number of times to erode before dilating (or vice-versa),
+    - 0 <= abs(levels) <= min(width/4, height/4, 64) 
+    - default=1,
+    - negative values are open, positive values are close
 			  
 The input will contain a stream of images, followed by
 an end of file. There is no upper limit on the number
