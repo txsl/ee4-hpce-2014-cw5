@@ -147,7 +147,7 @@ Your repository should contain:
   into `bin/process` (whether or not you use CMake or something
   else to do the building).
 
-- readme.txt or readme.pdf : a document covering:
+- readme.txt, readme.pdf, or readme.md : a document covering:
   - What is the approach used to improve performance, in
      terms of algorithms, patterns, and optimisations.
   - A description of any testing methodology or verification.
