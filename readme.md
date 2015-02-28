@@ -1,6 +1,25 @@
 HPCE 2015 / CW5
 ===========
 
+Deadline update
+---------------
+
+I've updated the deadline to Friday 6th Mar at 23:59. This
+year I've been trying to keep deadlines stable, but it
+is always a bit of balancing act given people have lots of
+other things going on, and I'd like people to actually be able
+to spend some time on these two courseworks.
+
+The original intention was to keep courseworks out of the
+DoC exam period, which will still happen, though it will
+now encroach on the revision period. So given that a large
+number of people seemed happy with that in the meme issue,
+I'm happy to move things back (as always, deadline changes
+need to be justified, and not disadvantage anyone).
+
+Overview
+--------
+
 This is a program for performing morphological operations in gray-scale
 images, and in particular very large images. The general idea of
 morphological operations can be found here:
@@ -147,7 +166,7 @@ Your repository should contain:
   into `bin/process` (whether or not you use CMake or something
   else to do the building).
 
-- readme.txt or readme.pdf : a document covering:
+- readme.txt, readme.pdf, or readme.md : a document covering:
   - What is the approach used to improve performance, in
      terms of algorithms, patterns, and optimisations.
   - A description of any testing methodology or verification.
