@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd "$( dirname "${BASH_SOURCE[0]}" )"/../
+if [ $# -ne 6 ]; then
+	echo "INVALUD USAGE"
+	echo "$0 <image> <width> <height> <outfile> <bits> <level>"
+	echo
+	echo
+fi
+
+
+
+convert ${1} -depth $5 gray:- | ./bin/process $2 $3 $5 $6 | convert -size ${2}x${3} -depth $5 gray:- ${4}.png
