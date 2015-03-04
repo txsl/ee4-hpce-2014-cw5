@@ -6,7 +6,7 @@ bin/process : src/process.cpp
 bin/process_v1 : src/process_v1_single_process_function.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
 
-bin/process_v2 : src/process_v2.cpp
+bin/process_v2 : src/process_v2_open_cl.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
 
 bin/process_v3 : src/process_v3.cpp
