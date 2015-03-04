@@ -3,7 +3,7 @@ CPPFLAGS += -W -Wall -std=c++11
 bin/process : src/process.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
 
-bin/process_v1 : src/process_v1.cpp
+bin/process_v1 : src/process_v1_single_process_function.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
 
 bin/process_v2 : src/process_v2.cpp
