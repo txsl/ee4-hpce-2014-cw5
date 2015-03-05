@@ -6,6 +6,11 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+#define __CL_ENABLE_EXCEPTIONS 
+#include "CL/cl.hpp"
+
+#include <fstream>
+#include <streambuf>
 
 
 #if !(defined(_WIN32) || defined(_WIN64))
@@ -31,6 +36,29 @@ void set_binary_io()
 	_setmode(_fileno(stdout), _O_BINARY);
 }
 #endif
+
+
+std::string LoadSource(const char *fileName)
+{
+    // Don't forget to change your_login here
+    std::string baseDir="src";
+    if(getenv("HPCE_CL_SRC_DIR")){
+        baseDir=getenv("HPCE_CL_SRC_DIR");
+    }
+
+    std::string fullName=baseDir+"/"+fileName;
+
+    // Open a read-only binary stream over the file
+    std::ifstream src(fullName, std::ios::in | std::ios::binary);
+    if(!src.is_open())
+        throw std::runtime_error("LoadSource : Couldn't load cl file from '"+fullName+"'.");
+
+    // Read all characters of the file into a string
+    return std::string(
+        (std::istreambuf_iterator<char>(src)), // Node the extra brackets.
+        std::istreambuf_iterator<char>()
+    );
+}
 
 
 ////////////////////////////////////////////
@@ -141,153 +169,6 @@ void write_blob(int fd, uint64_t cbBlob, const void *pBlob)
 	}
 }
 
-///////////////////////////////////////////////////////////////////
-// Basic image processing primitives
-
-uint32_t vmin(uint32_t a, uint32_t b)
-{ return std::min(a,b); }
-
-uint32_t vmin(uint32_t a, uint32_t b, uint32_t c)
-{ return std::min(a,std::min(b,c)); }
-
-uint32_t vmin(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
-{ return std::min(std::min(a,d),std::min(b,c)); }
-
-uint32_t vmin(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e)
-{ return std::min(e, std::min(std::min(a,d),std::min(b,c))); }
-
-uint32_t vmax(uint32_t a, uint32_t b)
-{ return std::max(a,b); }
-
-uint32_t vmax(uint32_t a, uint32_t b, uint32_t c)
-{ return std::max(a,std::max(b,c)); }
-
-uint32_t vmax(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
-{ return std::max(std::max(a,d),std::max(b,c)); }
-
-uint32_t vmax(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e)
-{ return std::max(e, std::max(std::max(a,d),std::max(b,c))); }
-
-///////////////////////////////////////////////////////////////////
-// Composite image processing
-
-void process(int levels, uint32_t w, uint32_t h, uint32_t /*bits*/, uint32_t *pixels, uint32_t *buffer)
-{
-	if (levels < 0) {
-		for(int i=0;i<std::abs(levels);i++){
-			auto in=[&](int x, int y) -> uint32_t { return pixels[y*w+x]; };
-			auto out=[&](int x, int y) -> uint32_t & {return buffer[y*w+x]; };
-			
-			for(unsigned x=0;x<w;x++){
-				if(x==0){
-					out(0,0)=vmin(in(0,0), in(0,1), in(1,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(0,y)=vmin(in(0,y), in(0,y-1), in(1,y), in(0,y+1));
-					}
-					out(0,h-1)=vmin(in(0,h-1), in(0,h-2), in(1,h-1));
-				}else if(x<w-1){
-					out(x,0)=vmin(in(x,0), in(x-1,0), in(x,1), in(x+1,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(x,y)=vmin(in(x,y), in(x-1,y), in(x,y-1), in(x,y+1), in(x+1,y));
-					}
-					out(x,h-1)=vmin(in(x,h-1), in(x-1,h-1), in(x,h-2), in(x+1,h-1));
-				}else{
-					out(w-1,0)=vmin(in(w-1,0), in(w-1,1), in(w-2,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(w-1,y)=vmin(in(w-1,y), in(w-1,y-1), in(w-2,y), in(w-1,y+1));
-					}
-					out(w-1,h-1)=vmin(in(w-1,h-1), in(w-1,h-2), in(w-2,h-1));
-				}
-			}
-			std::swap(pixels, buffer);
-		}
-		for(int i=0;i<std::abs(levels);i++){
-			auto in=[&](int x, int y) -> uint32_t { return pixels[y*w+x]; };
-			auto out=[&](int x, int y) -> uint32_t & {return buffer[y*w+x]; };
-			
-			for(unsigned x=0;x<w;x++){
-				if(x==0){
-					out(0,0)=vmax(in(0,0), in(0,1), in(1,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(0,y)=vmax(in(0,y), in(0,y-1), in(1,y), in(0,y+1));
-					}
-					out(0,h-1)=vmax(in(0,h-1), in(0,h-2), in(1,h-1));
-				}else if(x<w-1){
-					out(x,0)=vmax(in(x,0), in(x-1,0), in(x,1), in(x+1,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(x,y)=vmax(in(x,y), in(x-1,y), in(x,y-1), in(x,y+1), in(x+1,y));
-					}
-					out(x,h-1)=vmax(in(x,h-1), in(x-1,h-1), in(x,h-2), in(x+1,h-1));
-				}else{
-					out(w-1,0)=vmax(in(w-1,0), in(w-1,1), in(w-2,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(w-1,y)=vmax(in(w-1,y), in(w-1,y-1), in(w-2,y), in(w-1,y+1));
-					}
-					out(w-1,h-1)=vmax(in(w-1,h-1), in(w-1,h-2), in(w-2,h-1));
-				}
-			}
-
-			std::swap(pixels, buffer);
-		}
-	} else {
-		for(int i=0;i<std::abs(levels);i++){
-			auto in=[&](int x, int y) -> uint32_t { return pixels[y*w+x]; };
-			auto out=[&](int x, int y) -> uint32_t & {return buffer[y*w+x]; };
-			
-			for(unsigned x=0;x<w;x++){
-				if(x==0){
-					out(0,0)=vmax(in(0,0), in(0,1), in(1,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(0,y)=vmax(in(0,y), in(0,y-1), in(1,y), in(0,y+1));
-					}
-					out(0,h-1)=vmax(in(0,h-1), in(0,h-2), in(1,h-1));
-				}else if(x<w-1){
-					out(x,0)=vmax(in(x,0), in(x-1,0), in(x,1), in(x+1,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(x,y)=vmax(in(x,y), in(x-1,y), in(x,y-1), in(x,y+1), in(x+1,y));
-					}
-					out(x,h-1)=vmax(in(x,h-1), in(x-1,h-1), in(x,h-2), in(x+1,h-1));
-				}else{
-					out(w-1,0)=vmax(in(w-1,0), in(w-1,1), in(w-2,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(w-1,y)=vmax(in(w-1,y), in(w-1,y-1), in(w-2,y), in(w-1,y+1));
-					}
-					out(w-1,h-1)=vmax(in(w-1,h-1), in(w-1,h-2), in(w-2,h-1));
-				}
-			}
-			
-			std::swap(pixels, buffer);
-		}
-		for(int i=0;i<std::abs(levels);i++){
-			auto in=[&](int x, int y) -> uint32_t { return pixels[y*w+x]; };
-			auto out=[&](int x, int y) -> uint32_t & {return buffer[y*w+x]; };
-			
-			for(unsigned x=0;x<w;x++){
-				if(x==0){
-					out(0,0)=vmin(in(0,0), in(0,1), in(1,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(0,y)=vmin(in(0,y), in(0,y-1), in(1,y), in(0,y+1));
-					}
-					out(0,h-1)=vmin(in(0,h-1), in(0,h-2), in(1,h-1));
-				}else if(x<w-1){
-					out(x,0)=vmin(in(x,0), in(x-1,0), in(x,1), in(x+1,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(x,y)=vmin(in(x,y), in(x-1,y), in(x,y-1), in(x,y+1), in(x+1,y));
-					}
-					out(x,h-1)=vmin(in(x,h-1), in(x-1,h-1), in(x,h-2), in(x+1,h-1));
-				}else{
-					out(w-1,0)=vmin(in(w-1,0), in(w-1,1), in(w-2,0));
-					for(unsigned y=1;y<h-1;y++){
-						out(w-1,y)=vmin(in(w-1,y), in(w-1,y-1), in(w-2,y), in(w-1,y+1));
-					}
-					out(w-1,h-1)=vmin(in(w-1,h-1), in(w-1,h-2), in(w-2,h-1));
-				}
-			}
-			std::swap(pixels, buffer);
-		}
-	}
-}
-
 // You may want to play with this to check you understand what is going on
 void invert(unsigned w, unsigned h, unsigned bits, std::vector<uint32_t> &pixels)
 {
@@ -343,14 +224,71 @@ int main(int argc, char *argv[])
 		std::vector<uint32_t> pixels(w*h);
 		
 		set_binary_io();
+
+
+
+		// SET UP OPEN CL
+
+		std::vector<cl::Platform> platforms;
+
+		cl::Platform::get(&platforms);
+		if(platforms.size()==0)
+			throw std::runtime_error("No OpenCL platforms found.");
+
+std::cerr<<"Found "<<platforms.size()<<" platforms\n";
+for(unsigned i=0;i<platforms.size();i++){
+    std::string vendor=platforms[i].getInfo<CL_PLATFORM_VENDOR>();
+    std::cerr<<"  Platform "<<i<<" : "<<vendor<<"\n";
+}
+int selectedPlatform=0;
+if(getenv("HPCE_SELECT_PLATFORM")){
+    selectedPlatform=atoi(getenv("HPCE_SELECT_PLATFORM"));
+}
+std::cerr<<"Choosing platform "<<selectedPlatform<<"\n";
+cl::Platform platform=platforms.at(selectedPlatform);  
+
+
+std::vector<cl::Device> devices;
+platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);  
+if(devices.size()==0){
+    throw std::runtime_error("No opencl devices found.\n");
+}
+
+std::cerr<<"Found "<<devices.size()<<" devices\n";
+for(unsigned i=0;i<devices.size();i++){
+    std::string name=devices[i].getInfo<CL_DEVICE_NAME>();
+    std::cerr<<"  Device "<<i<<" : "<<name<<"\n";
+}
+
+int selectedDevice=0;
+if(getenv("HPCE_SELECT_DEVICE")){
+    selectedDevice=atoi(getenv("HPCE_SELECT_DEVICE"));
+}
+std::cerr<<"Choosing device "<<selectedDevice<<"\n";
+cl::Device device=devices.at(selectedDevice);
+
+cl::Context context(devices);
+
+
+
+std::string kernelSource=LoadSource("process_v2.cl");
+
+cl::Program::Sources sources;   // A vector of (data,length) pairs
+sources.push_back(std::make_pair(kernelSource.c_str(), kernelSource.size()+1)); // push on our single string
+
+cl::Program program(context, sources);
+program.build(devices);
+
+
+
+
 		
 		while(1){
 			if(!read_blob(STDIN_FILENO, cbRaw, &raw[0]))
 				break;	// No more images
 			unpack_blob(w, h, bits, &raw[0], &pixels[0]);		
 			
-			std::vector<uint32_t> buffer(w*h);
-			process(levels, w, h, bits, &pixels[0], &buffer[0]);
+			process(levels, w, h, bits, pixels);
 			//invert(w, h, bits, pixels);
 			
 			pack_blob(w, h, bits, &pixels[0], &raw[0]);
