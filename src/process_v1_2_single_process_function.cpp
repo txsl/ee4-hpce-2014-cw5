@@ -190,7 +190,7 @@ void process(int levels, unsigned w, unsigned h, unsigned /*bits*/, std::vector<
 				}else if(x<w-1){
 					out(x,0)=std::min(in(x,0), std::min(in(x-1,0), std::min(in(x,1), in(x+1,0))));
 					for(unsigned y=1;y<h-1;y++){
-						out(x,y)=std::min(in(x,y), std::min(in(x-1,y), std::min(in(x,y-1), in(x,y+1), in(x+1,y))));
+						out(x,y)=std::min(in(x,y), std::min(in(x-1,y), std::min(in(x,y-1), std::min(in(x,y+1), in(x+1,y)))));
 					}
 					out(x,h-1)=std::min(in(x,h-1), std::min(in(x-1,h-1), std::min(in(x,h-2), in(x+1,h-1))));
 				}else{
@@ -217,7 +217,7 @@ void process(int levels, unsigned w, unsigned h, unsigned /*bits*/, std::vector<
 				}else if(x<w-1){
 					out(x,0)=std::max(in(x,0), std::max(in(x-1,0), std::max(in(x,1), in(x+1,0))));
 					for(unsigned y=1;y<h-1;y++){
-						out(x,y)=std::max(in(x,y), std::max(in(x-1,y), std::max(in(x,y-1), in(x,y+1), in(x+1,y))));
+						out(x,y)=std::max(in(x,y), std::max(in(x-1,y), std::max(in(x,y-1), std::max(in(x,y+1), in(x+1,y)))));
 					}
 					out(x,h-1)=std::max(in(x,h-1), std::max(in(x-1,h-1), std::max(in(x,h-2), in(x+1,h-1))));
 				}else{
@@ -245,7 +245,7 @@ void process(int levels, unsigned w, unsigned h, unsigned /*bits*/, std::vector<
 				}else if(x<w-1){
 					out(x,0)=std::max(in(x,0), std::max(in(x-1,0), std::max(in(x,1), in(x+1,0))));
 					for(unsigned y=1;y<h-1;y++){
-						out(x,y)=std::max(in(x,y), std::max(in(x-1,y), std::max(in(x,y-1), in(x,y+1), in(x+1,y))));
+						out(x,y)=std::max(in(x,y), std::max(in(x-1,y), std::max(in(x,y-1), std::max(in(x,y+1), in(x+1,y)))));
 					}
 					out(x,h-1)=std::max(in(x,h-1), std::max(in(x-1,h-1), std::max(in(x,h-2), in(x+1,h-1))));
 				}else{
@@ -272,7 +272,7 @@ void process(int levels, unsigned w, unsigned h, unsigned /*bits*/, std::vector<
 				}else if(x<w-1){
 					out(x,0)=std::min(in(x,0), std::min(in(x-1,0), std::min(in(x,1), in(x+1,0))));
 					for(unsigned y=1;y<h-1;y++){
-						out(x,y)=std::min(in(x,y), std::min(in(x-1,y), std::min(in(x,y-1), in(x,y+1), in(x+1,y))));
+						out(x,y)=std::min(in(x,y), std::min(in(x-1,y), std::min(in(x,y-1), std::min(in(x,y+1), in(x+1,y)))));
 					}
 					out(x,h-1)=std::min(in(x,h-1), std::min(in(x-1,h-1), std::min(in(x,h-2), in(x+1,h-1))));
 				}else{

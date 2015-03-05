@@ -1,4 +1,4 @@
-void process(int levels, unsigned w, unsigned h, unsigned /*bits*/, std::vector<uint32_t> &pixels)
+__kernel void process(int levels, unsigned w, unsigned h, unsigned /*bits*/, std::vector<uint32_t> &pixels)
 {
 	std::vector<uint32_t> buffer(w*h);
 
