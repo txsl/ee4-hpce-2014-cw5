@@ -171,8 +171,10 @@ uint32_t vmax(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e)
 ///////////////////////////////////////////////////////////////////
 // Composite image processing
 
-void process(int levels, uint32_t w, uint32_t h, uint32_t /*bits*/, uint32_t *pixels, uint32_t *buffer)
+void process(int levels, unsigned w, unsigned h, unsigned /*bits*/, std::vector<uint32_t> &pixels)
 {
+	std::vector<uint32_t> buffer(w*h);
+
 	if (levels < 0) {
 		for(int i=0;i<std::abs(levels);i++){
 			auto in=[&](int x, int y) -> uint32_t { return pixels[y*w+x]; };
@@ -349,8 +351,7 @@ int main(int argc, char *argv[])
 				break;	// No more images
 			unpack_blob(w, h, bits, &raw[0], &pixels[0]);		
 			
-			std::vector<uint32_t> buffer(w*h);
-			process(levels, w, h, bits, &pixels[0], &buffer[0]);
+			process(levels, w, h, bits, pixels);
 			//invert(w, h, bits, pixels);
 			
 			pack_blob(w, h, bits, &pixels[0], &raw[0]);
