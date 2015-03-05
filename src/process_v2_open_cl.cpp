@@ -40,7 +40,7 @@ void set_binary_io()
 
 std::string LoadSource(const char *fileName)
 {
-    // Don't forget to change your_login here
+	// Don't forget to change your_login here
     std::string baseDir="src";
     if(getenv("HPCE_CL_SRC_DIR")){
         baseDir=getenv("HPCE_CL_SRC_DIR");
@@ -182,97 +182,69 @@ void invert(unsigned w, unsigned h, unsigned bits, std::vector<uint32_t> &pixels
 
 
 
-void erode(unsigned x, 
-	unsigned w, 
-	unsigned h, 
-	unsigned *input, 
-	unsigned *output)
-{
-	if(x==0){
-		output[w*(0)+0]=std::min(input[w*(0)+0], std::min(input[w*(1)+0], input[w*(0)+1]));
-		for(unsigned y=1;y<h-1;y++){
-			output[w*(y)+0]=std::min(input[w*(y)+0], std::min(input[w*(y-1)+0], std::min(input[w*(y)+1], input[w*(y+1)+0])));
-		}
-		output[w*(h-1)+0]=std::min(input[w*(h-1)+0], std::min(input[w*(h-2)+0], input[w*(h-1)+1]));
-	}else if(x<w-1){
-		output[w*(0)+x]=std::min(input[w*(0)+x], std::min(input[w*(0)+x-1], std::min(input[w*(1)+x], input[w*(0)+x+1])));
-		for(unsigned y=1;y<h-1;y++){
-			output[w*(y)+x]=std::min(input[w*(y)+x], std::min(input[w*(y)+x-1], std::min(input[w*(y-1)+x], std::min(input[w*(y+1)+x], input[w*(y)+x+1]))));
-		}
-		output[w*(h-1)+x]=std::min(input[w*(h-1)+x], std::min(input[w*(h-1)+x-1], std::min(input[w*(h-2)+x], input[w*(h-1)+x+1])));
-	}else{
-		output[w*(0)+w-1]=std::min(input[w*(0)+w-1], std::min(input[w*(1)+w-1], input[w*(0)+w-2]));
-		for(unsigned y=1;y<h-1;y++){
-			output[w*(y)+w-1]=std::min(input[w*(y)+w-1], std::min(input[w*(y-1)+w-1], std::min(input[w*(y)+w-2], input[w*(y+1)+w-1])));
-		}
-		output[w*(h-1)+w-1]=std::min(input[w*(h-1)+w-1], std::min(input[w*(h-2)+w-1], input[w*(h-1)+w-2]));
-	}
-}
-
-void dilate(unsigned x, 
-	unsigned w, 
-	unsigned h, 
-	unsigned *input, 
-	unsigned *output)
-{
-	if(x==0){
-		output[w*(0)+0]=std::max(input[w*(0)+0], std::max(input[w*(1)+0], input[w*(0)+1]));
-		for(unsigned y=1;y<h-1;y++){
-			output[w*(y)+0]=std::max(input[w*(y)+0], std::max(input[w*(y-1)+0], std::max(input[w*(y)+1], input[w*(y+1)+0])));
-		}
-		output[w*(h-1)+0]=std::max(input[w*(h-1)+0], std::max(input[w*(h-2)+0], input[w*(h-1)+1]));
-	}else if(x<w-1){
-		output[w*(0)+x]=std::max(input[w*(0)+x], std::max(input[w*(0)+x-1], std::max(input[w*(1)+x], input[w*(0)+x+1])));
-		for(unsigned y=1;y<h-1;y++){
-			output[w*(y)+x]=std::max(input[w*(y)+x], std::max(input[w*(y)+x-1], std::max(input[w*(y-1)+x], std::max(input[w*(y+1)+x], input[w*(y)+x+1]))));
-		}
-		output[w*(h-1)+x]=std::max(input[w*(h-1)+x], std::max(input[w*(h-1)+x-1], std::max(input[w*(h-2)+x], input[w*(h-1)+x+1])));
-	}else{
-		output[w*(0)+w-1]=std::max(input[w*(0)+w-1], std::max(input[w*(1)+w-1], input[w*(0)+w-2]));
-		for(unsigned y=1;y<h-1;y++){
-			output[w*(y)+w-1]=std::max(input[w*(y)+w-1], std::max(input[w*(y-1)+w-1], std::max(input[w*(y)+w-2], input[w*(y+1)+w-1])));
-		}
-		output[w*(h-1)+w-1]=std::max(input[w*(h-1)+w-1], std::max(input[w*(h-2)+w-1], input[w*(h-1)+w-2]));
-	}
-}
 
 
-
-
-
-
-
-
-void process(int levels, unsigned w, unsigned h, unsigned /*bits*/, std::vector<uint32_t> &pixels)
+void process(cl::Device device, cl::Program program, cl::Context context, int levels, unsigned w, unsigned h, unsigned bits, std::vector<uint32_t> &pixels)
 {
 	std::vector<uint32_t> buffer(w*h);
 
+	size_t cbBuffer=w*h*sizeof(uint32_t); //size in bytes
+
+	cl::Buffer buffInput	 (context, CL_MEM_READ_WRITE, cbBuffer);
+	cl::Buffer buffOutput    (context, CL_MEM_READ_WRITE, cbBuffer);
+
+	cl::Kernel erodekernel (program, "erode");
+	cl::Kernel dilatekernel(program, "dilate");
+
+	cl::CommandQueue queue(context, device);
+	
+	cl::NDRange offset(0,0);               // Always start iterations at x=0, y=0
+	cl::NDRange globalSize(w,h);   // Global size must match the original loops
+	cl::NDRange localSize=cl::NullRange;    // We don't care about local size
+
+
+	queue.enqueueWriteBuffer(buffInput, CL_TRUE, 0, cbBuffer, &pixels[0], NULL);
+
 	if (levels < 0) {
 		for(int i=0;i<std::abs(levels);i++){
-			for(unsigned x=0;x<w;x++){
-				erode(x, w, h, &pixels[0], &buffer[0]);
-			}
-			std::swap(pixels, buffer);
+			erodekernel.setArg(0, buffInput);
+			erodekernel.setArg(1, buffOutput);
+
+			queue.enqueueNDRangeKernel(erodekernel, offset, globalSize, localSize);
+			queue.enqueueBarrier();
+
+			std::swap(buffOutput, buffInput);
 		}
 		for(int i=0;i<std::abs(levels);i++){
-			for(unsigned x=0;x<w;x++){
-				dilate(x, w, h, &pixels[0], &buffer[0]);
-			}
-			std::swap(pixels, buffer);
+			dilatekernel.setArg(0, buffInput);
+			dilatekernel.setArg(1, buffOutput);
+
+			queue.enqueueNDRangeKernel(dilatekernel, offset, globalSize, localSize);
+			queue.enqueueBarrier();
+
+			std::swap(buffOutput, buffInput);
 		}
+		queue.enqueueReadBuffer(buffInput, CL_TRUE, 0, cbBuffer, &pixels[0]);
 	} else {
 		for(int i=0;i<std::abs(levels);i++){
-			for(unsigned x=0;x<w;x++){
-				dilate(x, w, h, &pixels[0], &buffer[0]);
-			}
-			std::swap(pixels, buffer);
+			dilatekernel.setArg(0, buffInput);
+			dilatekernel.setArg(1, buffOutput);
+
+			queue.enqueueNDRangeKernel(dilatekernel, offset, globalSize, localSize);
+			queue.enqueueBarrier();
+
+			std::swap(buffOutput, buffInput);
 		}
 		for(int i=0;i<std::abs(levels);i++){
-			for(unsigned x=0;x<w;x++){
-				erode(x, w, h, &pixels[0], &buffer[0]);
-			}
-			std::swap(pixels, buffer);
+			erodekernel.setArg(0, buffInput);
+			erodekernel.setArg(1, buffOutput);
+
+			queue.enqueueNDRangeKernel(erodekernel, offset, globalSize, localSize);
+			queue.enqueueBarrier();
+
+			std::swap(buffOutput, buffInput);
 		}
+		queue.enqueueReadBuffer(buffInput, CL_TRUE, 0, cbBuffer, &pixels[0]);
 	}
 }
 
@@ -376,15 +348,14 @@ int main(int argc, char *argv[])
 
 		cl::Program program(context, sources);
 		try{
-		    program.build(devices);
+			program.build(devices);
 		}catch(...){
-		    for(unsigned i=0;i<devices.size();i++){
-		        std::cerr<<"Log for device "<<devices[i].getInfo<CL_DEVICE_NAME>()<<":\n\n";
-		        std::cerr<<program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[i])<<"\n\n";
-		    }
-		    throw;
+			for(unsigned i=0;i<devices.size();i++){
+				std::cerr<<"Log for device "<<devices[i].getInfo<CL_DEVICE_NAME>()<<":\n\n";
+				std::cerr<<program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[i])<<"\n\n";
+			}
+			throw;
 		}
-
 
 		fprintf(stderr, "Kernel Done.\n");
 
@@ -394,7 +365,7 @@ int main(int argc, char *argv[])
 				break;	// No more images
 			unpack_blob(w, h, bits, &raw[0], &pixels[0]);		
 			
-			process(levels, w, h, bits, pixels);
+			process(device, program, context, levels, w, h, bits, pixels);
 			//invert(w, h, bits, pixels);
 			
 			pack_blob(w, h, bits, &pixels[0], &raw[0]);
