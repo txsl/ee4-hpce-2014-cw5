@@ -374,16 +374,16 @@ int main(int argc, char *argv[])
 		cl::Program::Sources sources;   // A vector of (data,length) pairs
 		sources.push_back(std::make_pair(kernelSource.c_str(), kernelSource.size()+1)); // push on our single string
 
-		// cl::Program program(context, sources);
-		// try{
-		//     program.build(devices);
-		// }catch(...){
-		//     for(unsigned i=0;i<devices.size();i++){
-		//         std::cerr<<"Log for device "<<devices[i].getInfo<CL_DEVICE_NAME>()<<":\n\n";
-		//         std::cerr<<program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[i])<<"\n\n";
-		//     }
-		//     throw;
-		// }
+		cl::Program program(context, sources);
+		try{
+		    program.build(devices);
+		}catch(...){
+		    for(unsigned i=0;i<devices.size();i++){
+		        std::cerr<<"Log for device "<<devices[i].getInfo<CL_DEVICE_NAME>()<<":\n\n";
+		        std::cerr<<program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[i])<<"\n\n";
+		    }
+		    throw;
+		}
 
 
 		fprintf(stderr, "Kernel Done.\n");
