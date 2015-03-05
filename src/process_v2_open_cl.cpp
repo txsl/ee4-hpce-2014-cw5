@@ -182,56 +182,64 @@ void invert(unsigned w, unsigned h, unsigned bits, std::vector<uint32_t> &pixels
 
 
 
-
-void erode(unsigned x, unsigned w, unsigned h, unsigned *input, unsigned *output) {
-	auto in=[&](int x, int y) -> uint32_t { return input[y*w+x]; };
-	auto out=[&](int x, int y) -> uint32_t & {return output[y*w+x]; };
-
+void erode(unsigned x, 
+	unsigned w, 
+	unsigned h, 
+	unsigned *input, 
+	unsigned *output)
+{
 	if(x==0){
-		out(0,0)=std::min(in(0,0), std::min(in(0,1), in(1,0)));
+		output[w*(0)+0]=std::min(input[w*(0)+0], std::min(input[w*(1)+0], input[w*(0)+1]));
 		for(unsigned y=1;y<h-1;y++){
-			out(0,y)=std::min(in(0,y), std::min(in(0,y-1), std::min(in(1,y), in(0,y+1))));
+			output[w*(y)+0]=std::min(input[w*(y)+0], std::min(input[w*(y-1)+0], std::min(input[w*(y)+1], input[w*(y+1)+0])));
 		}
-		out(0,h-1)=std::min(in(0,h-1), std::min(in(0,h-2), in(1,h-1)));
+		output[w*(h-1)+0]=std::min(input[w*(h-1)+0], std::min(input[w*(h-2)+0], input[w*(h-1)+1]));
 	}else if(x<w-1){
-		out(x,0)=std::min(in(x,0), std::min(in(x-1,0), std::min(in(x,1), in(x+1,0))));
+		output[w*(0)+x]=std::min(input[w*(0)+x], std::min(input[w*(0)+x-1], std::min(input[w*(1)+x], input[w*(0)+x+1])));
 		for(unsigned y=1;y<h-1;y++){
-			out(x,y)=std::min(in(x,y), std::min(in(x-1,y), std::min(in(x,y-1), std::min(in(x,y+1), in(x+1,y)))));
+			output[w*(y)+x]=std::min(input[w*(y)+x], std::min(input[w*(y)+x-1], std::min(input[w*(y-1)+x], std::min(input[w*(y+1)+x], input[w*(y)+x+1]))));
 		}
-		out(x,h-1)=std::min(in(x,h-1), std::min(in(x-1,h-1), std::min(in(x,h-2), in(x+1,h-1))));
+		output[w*(h-1)+x]=std::min(input[w*(h-1)+x], std::min(input[w*(h-1)+x-1], std::min(input[w*(h-2)+x], input[w*(h-1)+x+1])));
 	}else{
-		out(w-1,0)=std::min(in(w-1,0), std::min(in(w-1,1), in(w-2,0)));
+		output[w*(0)+w-1]=std::min(input[w*(0)+w-1], std::min(input[w*(1)+w-1], input[w*(0)+w-2]));
 		for(unsigned y=1;y<h-1;y++){
-			out(w-1,y)=std::min(in(w-1,y), std::min(in(w-1,y-1), std::min(in(w-2,y), in(w-1,y+1))));
+			output[w*(y)+w-1]=std::min(input[w*(y)+w-1], std::min(input[w*(y-1)+w-1], std::min(input[w*(y)+w-2], input[w*(y+1)+w-1])));
 		}
-		out(w-1,h-1)=std::min(in(w-1,h-1), std::min(in(w-1,h-2), in(w-2,h-1)));
+		output[w*(h-1)+w-1]=std::min(input[w*(h-1)+w-1], std::min(input[w*(h-2)+w-1], input[w*(h-1)+w-2]));
 	}
 }
 
-void dilate(unsigned x, unsigned w, unsigned h, unsigned *input, unsigned *output) {
-	auto in=[&](int x, int y) -> uint32_t { return input[y*w+x]; };
-	auto out=[&](int x, int y) -> uint32_t & {return output[y*w+x]; };
-
+void dilate(unsigned x, 
+	unsigned w, 
+	unsigned h, 
+	unsigned *input, 
+	unsigned *output)
+{
 	if(x==0){
-		out(0,0)=std::max(in(0,0), std::max(in(0,1), in(1,0)));
+		output[w*(0)+0]=std::max(input[w*(0)+0], std::max(input[w*(1)+0], input[w*(0)+1]));
 		for(unsigned y=1;y<h-1;y++){
-			out(0,y)=std::max(in(0,y), std::max(in(0,y-1), std::max(in(1,y), in(0,y+1))));
+			output[w*(y)+0]=std::max(input[w*(y)+0], std::max(input[w*(y-1)+0], std::max(input[w*(y)+1], input[w*(y+1)+0])));
 		}
-		out(0,h-1)=std::max(in(0,h-1), std::max(in(0,h-2), in(1,h-1)));
+		output[w*(h-1)+0]=std::max(input[w*(h-1)+0], std::max(input[w*(h-2)+0], input[w*(h-1)+1]));
 	}else if(x<w-1){
-		out(x,0)=std::max(in(x,0), std::max(in(x-1,0), std::max(in(x,1), in(x+1,0))));
+		output[w*(0)+x]=std::max(input[w*(0)+x], std::max(input[w*(0)+x-1], std::max(input[w*(1)+x], input[w*(0)+x+1])));
 		for(unsigned y=1;y<h-1;y++){
-			out(x,y)=std::max(in(x,y), std::max(in(x-1,y), std::max(in(x,y-1), std::max(in(x,y+1), in(x+1,y)))));
+			output[w*(y)+x]=std::max(input[w*(y)+x], std::max(input[w*(y)+x-1], std::max(input[w*(y-1)+x], std::max(input[w*(y+1)+x], input[w*(y)+x+1]))));
 		}
-		out(x,h-1)=std::max(in(x,h-1), std::max(in(x-1,h-1), std::max(in(x,h-2), in(x+1,h-1))));
+		output[w*(h-1)+x]=std::max(input[w*(h-1)+x], std::max(input[w*(h-1)+x-1], std::max(input[w*(h-2)+x], input[w*(h-1)+x+1])));
 	}else{
-		out(w-1,0)=std::max(in(w-1,0), std::max(in(w-1,1), in(w-2,0)));
+		output[w*(0)+w-1]=std::max(input[w*(0)+w-1], std::max(input[w*(1)+w-1], input[w*(0)+w-2]));
 		for(unsigned y=1;y<h-1;y++){
-			out(w-1,y)=std::max(in(w-1,y), std::max(in(w-1,y-1), std::max(in(w-2,y), in(w-1,y+1))));
+			output[w*(y)+w-1]=std::max(input[w*(y)+w-1], std::max(input[w*(y-1)+w-1], std::max(input[w*(y)+w-2], input[w*(y+1)+w-1])));
 		}
-		out(w-1,h-1)=std::max(in(w-1,h-1), std::max(in(w-1,h-2), in(w-2,h-1)));
+		output[w*(h-1)+w-1]=std::max(input[w*(h-1)+w-1], std::max(input[w*(h-2)+w-1], input[w*(h-1)+w-2]));
 	}
 }
+
+
+
+
+
 
 
 
@@ -378,7 +386,9 @@ int main(int argc, char *argv[])
 		// }
 
 
-		
+		fprintf(stderr, "Kernel Done.\n");
+
+
 		while(1){
 			if(!read_blob(STDIN_FILENO, cbRaw, &raw[0]))
 				break;	// No more images

@@ -141,32 +141,6 @@ void write_blob(int fd, uint64_t cbBlob, const void *pBlob)
 	}
 }
 
-///////////////////////////////////////////////////////////////////
-// Basic image processing primitives
-
-uint32_t vmin(uint32_t a, uint32_t b)
-{ return std::min(a,b); }
-
-uint32_t vmin(uint32_t a, uint32_t b, uint32_t c)
-{ return std::min(a,std::min(b,c)); }
-
-uint32_t vmin(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
-{ return std::min(std::min(a,d),std::min(b,c)); }
-
-uint32_t vmin(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e)
-{ return std::min(e, std::min(std::min(a,d),std::min(b,c))); }
-
-uint32_t vmax(uint32_t a, uint32_t b)
-{ return std::max(a,b); }
-
-uint32_t vmax(uint32_t a, uint32_t b, uint32_t c)
-{ return std::max(a,std::max(b,c)); }
-
-uint32_t vmax(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
-{ return std::max(std::max(a,d),std::max(b,c)); }
-
-uint32_t vmax(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e)
-{ return std::max(e, std::max(std::max(a,d),std::max(b,c))); }
 
 ///////////////////////////////////////////////////////////////////
 // Composite image processing
