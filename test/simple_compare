@@ -1,6 +1,6 @@
 #!/bin/bash
 
-make all -q
+make all --quiet
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"/../
 echo
