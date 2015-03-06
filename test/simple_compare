@@ -7,9 +7,11 @@ echo
 echo "###########################################"
 echo "############ SIMPLE TEST SUITE ############"
 echo "###########################################"
-echo "# A simple test suite to check the output bit matches the original"
+echo "# A simple test suite to check the output"
+echo "# bit matches the original"
 echo "#"
-echo "# This will NOT test through put or memory issues!"
+echo "# This will NOT test through put or memory"
+echo "# issues!"
 echo "###########################################"
 echo
 echo "  ___  ____    __    ____  ____        __     _   "
