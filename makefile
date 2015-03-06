@@ -19,8 +19,15 @@ CPPFLAGS += -I include -W -Wall -std=c++11 -O2 -lm
 bin/test_opencl : src/test_opencl.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
 
-bin/process : src/process.cpp
+
+
+
+
+
+
+bin/process_old : src/process_old.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
+
 
 
 
@@ -36,6 +43,8 @@ bin/process_ocl_v2 : src/process_ocl_v2_open_cl.cpp
 
 
 
+
+
 bin/process_buf_v1 : src/process_buf_v1.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
 
@@ -44,8 +53,18 @@ bin/process_buf_v2 : src/process_buf_v2.cpp
 
 
 
+INCLUDED_FILES = src/utilities/hpceutils.cpp src/algorithms/standard.cpp src/algorithms/optimised.cpp
 
-all : bin/process bin/process_ocl_v1_1 bin/process_ocl_v1_2 bin/process_ocl_v2 bin/process_buf_v1 bin/process_buf_v2
+bin/process : src/process.cpp $(INCLUDED_FILES)
+	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
+
+
+
+
+
+final : bin/process bin/process_old
+
+all: final bin/process_ocl_v1_1 bin/process_ocl_v1_2 bin/process_ocl_v2 bin/process_buf_v1 bin/process_buf_v2
 
 build_test: bin/test_opencl
 

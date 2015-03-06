@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
 		int height = 0;
 
 		for (int i = 0; i < heightForBuffer; i++) {
-			fprintf(stderr, "Preloading with %i (input: %i)\n", height, inputLoc);
+			// fprintf(stderr, "Preloading with %i (input: %i)\n", height, inputLoc);
 
 			if(!read_blob(STDIN_FILENO, readBufferSize, &rawInputBuffer[0]))
 				break;	// No more images
@@ -359,7 +359,7 @@ int main(int argc, char *argv[])
 				for (int i = 0; i < heightForBuffer+1+outHeight; i++) {
 					for (int j = i*w; j < (i+1)*w; j++) {
 						pixIntermediateBuffer[j] = pixIntermediateBuffer[j + diff*w];
-						fprintf(stderr, "  moving %i to %i\n", j + diff*w, heightForBuffer-diff);
+						// fprintf(stderr, "  moving %i to %i\n", j + diff*w, heightForBuffer-diff);
 					}
 				}
 				process(levels, w, 2*heightForBuffer+1, bits, pixIntermediateBuffer);
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
 
 		// write the last few lines
 		for (int i = 0; i < heightForBuffer; i++) {
-			fprintf(stderr, "Final heght %i (inputLoc: %i)\n", height, inputLoc);
+			// fprintf(stderr, "Final heght %i (inputLoc: %i)\n", height, inputLoc);
 
 			pack_blob(w, 1, bits, &pixIntermediateBuffer[w*(heightForBuffer+i+1)], &rawOutputBuffer[0]);
 			write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
