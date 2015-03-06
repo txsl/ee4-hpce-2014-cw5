@@ -298,21 +298,94 @@ int main(int argc, char *argv[])
 		
 		uint64_t cbRaw=uint64_t(w)*h*bits/8;
 		std::vector<uint64_t> raw(size_t(cbRaw/8));
+
+
+		// ************ SET UP BUFFER ************
+		int heightForBuffer = std::abs(levels)*2;
 		
+		uint64_t readBufferSize  = uint64_t(w)*bits/8;
+		std::vector<uint64_t> rawInputBuffer(readBufferSize);
+		std::vector<uint64_t> rawOutputBuffer(readBufferSize);
+
+		uint32_t maxLoc   = (uint64_t(w)*(heightForBuffer*2+1));
+		std::vector<uint32_t> pixInputBuffer(maxLoc);
+		std::vector<uint32_t> pixIntermediateBuffer(maxLoc);
+		std::vector<uint32_t> pixOutputBuffer(maxLoc);
+		uint32_t inputLoc = 0;
+		uint32_t interLoc = 0;
+		uint32_t outptLoc = 0;
+
 		std::vector<uint32_t> pixels(w*h);
 		
 		set_binary_io();
+
+
+		//preload the required data:
+		int outHeight = 0;
+		int height = 0;
+
+		for (int i = 0; i < heightForBuffer; i++) {
+			fprintf(stderr, "Preloading with %i (input: %i)\n", height, inputLoc);
+
+			if(!read_blob(STDIN_FILENO, readBufferSize, &rawInputBuffer[0]))
+				break;	// No more images
+			unpack_blob(w, 1, bits, &rawInputBuffer[0], &pixInputBuffer[inputLoc]);	
+			inputLoc += w;
+			height++;
+		}
 		
 		while(1){
-			if(!read_blob(STDIN_FILENO, cbRaw, &raw[0]))
+			if(!read_blob(STDIN_FILENO, readBufferSize, &rawInputBuffer[0]))
 				break;	// No more images
-			unpack_blob(w, h, bits, &raw[0], &pixels[0]);		
+			// fprintf(stderr, "Working with %i (input: %i)\n", height, inputLoc);
+			unpack_blob(w, 1, bits, &rawInputBuffer[0], &pixInputBuffer[inputLoc]);
 			
-			process(levels, w, h, bits, pixels);
-			//invert(w, h, bits, pixels);
+			inputLoc += w;
+			if (inputLoc >= maxLoc){
+				inputLoc = 0;
+			}
+
+			interLoc = inputLoc;
+			for (int i = 0; i < w*(heightForBuffer*2+1) ; i++) {
+				pixIntermediateBuffer[i] = pixInputBuffer[interLoc];
+				interLoc++;
+				if (interLoc >= maxLoc) {
+					interLoc = 0;
+				}
+			}
+
+			if (outHeight < heightForBuffer) {
+				int diff = heightForBuffer - outHeight;
+				for (int i = 0; i < heightForBuffer+1+outHeight; i++) {
+					for (int j = i*w; j < (i+1)*w; j++) {
+						// pixIntermediateBuffer[j] = pixIntermediateBuffer[w*(2*heightForBuffer-i)+j];
+						// fprintf(stderr, "  moving %i to %i\n", w*(2*heightForBuffer-i)+j, j);
+						pixIntermediateBuffer[j] = pixIntermediateBuffer[j + diff*w];
+						fprintf(stderr, "  moving %i to %i\n", j + diff*w, heightForBuffer-diff);
+					}
+				}
+				process(levels, w, 2*heightForBuffer+1, bits, pixIntermediateBuffer);
+
+				pack_blob(w, 1, bits, &pixIntermediateBuffer[w*(heightForBuffer-diff)], &rawOutputBuffer[0]);
+				write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
+			} else {
+				process(levels, w, 2*heightForBuffer+1, bits, pixIntermediateBuffer);
+
+				pack_blob(w, 1, bits, &pixIntermediateBuffer[w*heightForBuffer], &rawOutputBuffer[0]);
+				write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
+			}
+
+			height++;
+			outHeight++;
+		}
+
+		// write the last few lines
+		for (int i = 0; i < heightForBuffer; i++) {
+			fprintf(stderr, "Final heght %i (inputLoc: %i)\n", height, inputLoc);
 			
-			pack_blob(w, h, bits, &pixels[0], &raw[0]);
-			write_blob(STDOUT_FILENO, cbRaw, &raw[0]);
+			pack_blob(w, 1, bits, &pixIntermediateBuffer[w*(heightForBuffer+i+1)], &rawOutputBuffer[0]);
+			write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
+			height++;
 		}
 		
 		return 0;
