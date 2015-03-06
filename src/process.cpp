@@ -27,7 +27,6 @@
 int main(int argc, char *argv[])
 {
 	try{
-
 		unsigned w, h, bits;
 		int levels;
 		hpce::utils::validate(argc, argv, w, h, bits, levels);
@@ -37,9 +36,9 @@ int main(int argc, char *argv[])
 		set_binary_io();
 		
 		return hpce::optimised::go(w, h, bits, levels);
-
-
-	}catch(std::exception &e){
+	}
+	catch(std::exception &e)
+	{
 		std::cerr<<"Caught exception : "<<e.what()<<"\n";
 		return 1;
 	}

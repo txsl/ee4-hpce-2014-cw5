@@ -176,6 +176,82 @@ namespace hpce{
 		}
 
 
+
+
+
+
+		void process_opencl(cl::Device device, cl::Program program, cl::Context context, int levels, unsigned w, unsigned h, unsigned bits, std::vector<uint32_t> &pixels)
+		{
+			std::vector<uint32_t> buffer(w*h);
+
+			size_t cbBuffer=w*h*sizeof(uint32_t); //size in bytes
+
+			cl::Buffer buffInput	 (context, CL_MEM_READ_WRITE, cbBuffer);
+			cl::Buffer buffOutput    (context, CL_MEM_READ_WRITE, cbBuffer);
+
+			cl::Kernel erodekernel (program, "erode");
+			cl::Kernel dilatekernel(program, "dilate");
+
+			cl::CommandQueue queue(context, device);
+			
+			cl::NDRange offset(0,0);               // Always start iterations at x=0, y=0
+			cl::NDRange globalSize(w,h);   // Global size must match the original loops
+			cl::NDRange localSize=cl::NullRange;    // We don't care about local size
+
+
+			queue.enqueueWriteBuffer(buffInput, CL_TRUE, 0, cbBuffer, &pixels[0], NULL);
+
+			if (levels < 0) {
+				for(int i=0;i<std::abs(levels);i++){
+					erodekernel.setArg(0, buffInput);
+					erodekernel.setArg(1, buffOutput);
+
+					queue.enqueueNDRangeKernel(erodekernel, offset, globalSize, localSize);
+					queue.enqueueBarrier();
+
+					std::swap(buffOutput, buffInput);
+				}
+				for(int i=0;i<std::abs(levels);i++){
+					dilatekernel.setArg(0, buffInput);
+					dilatekernel.setArg(1, buffOutput);
+
+					queue.enqueueNDRangeKernel(dilatekernel, offset, globalSize, localSize);
+					queue.enqueueBarrier();
+
+					std::swap(buffOutput, buffInput);
+				}
+				queue.enqueueReadBuffer(buffInput, CL_TRUE, 0, cbBuffer, &pixels[0]);
+			} else {
+				for(int i=0;i<std::abs(levels);i++){
+					dilatekernel.setArg(0, buffInput);
+					dilatekernel.setArg(1, buffOutput);
+
+					queue.enqueueNDRangeKernel(dilatekernel, offset, globalSize, localSize);
+					queue.enqueueBarrier();
+
+					std::swap(buffOutput, buffInput);
+				}
+				for(int i=0;i<std::abs(levels);i++){
+					erodekernel.setArg(0, buffInput);
+					erodekernel.setArg(1, buffOutput);
+
+					queue.enqueueNDRangeKernel(erodekernel, offset, globalSize, localSize);
+					queue.enqueueBarrier();
+
+					std::swap(buffOutput, buffInput);
+				}
+				queue.enqueueReadBuffer(buffInput, CL_TRUE, 0, cbBuffer, &pixels[0]);
+			}
+		}
+
+
+
+
+
+
+
+
+
 		int go_no_opencl(unsigned w, unsigned h, unsigned bits, int levels)
 		{
 			int heightForBuffer = std::abs(levels)*2;
@@ -370,12 +446,12 @@ namespace hpce{
 							pixIntermediateBuffer[j] = pixIntermediateBuffer[j + diff*w];
 						}
 					}
-					process(levels, w, 2*heightForBuffer+1, bits, pixIntermediateBuffer);
+					process_opencl(device, program, context, levels, w, 2*heightForBuffer+1, bits, pixIntermediateBuffer);
 
 					utils::pack_blob(w, 1, bits, &pixIntermediateBuffer[w*(heightForBuffer-diff)], &rawOutputBuffer[0]);
 					utils::write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
 				} else {
-					process(levels, w, 2*heightForBuffer+1, bits, pixIntermediateBuffer);
+					process_opencl(device, program, context, levels, w, 2*heightForBuffer+1, bits, pixIntermediateBuffer);
 
 					utils::pack_blob(w, 1, bits, &pixIntermediateBuffer[w*heightForBuffer], &rawOutputBuffer[0]);
 					utils::write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
