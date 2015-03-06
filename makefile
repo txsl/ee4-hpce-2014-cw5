@@ -1,4 +1,20 @@
-CPPFLAGS += -I include -W -Wall -std=c++11 -framework OpenCL -O2 -lm
+# Makefile adapted from HPCE-CW4, which was in turn adapted from  the Hands On OpenCL course: https://github.com/HandsOnOpenCL
+
+ifndef CPPC
+	CPPC=g++
+endif
+
+LDLIBS = -lOpenCL
+
+# Check our platform and make sure we define the APPLE variable
+# and set up the right compiler flags and libraries
+PLATFORM = $(shell uname -s)
+ifeq ($(PLATFORM), Darwin)
+	CPPC = clang++
+	LDLIBS = -framework OpenCL
+endif
+
+CPPFLAGS += -I include -W -Wall -std=c++11 -O2 -lm
 
 bin/test_opencl : src/test_opencl.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
