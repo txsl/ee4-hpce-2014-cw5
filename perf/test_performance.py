@@ -12,6 +12,8 @@ def fname_gen(width, height, bits):
     return "img/input_{0}_{1}_{2}.raw".format(width, height, bits)
 
 bits = [2**x for x in range(0, 6)]
+bits = [1,8] # Since we are only interested in 1 or 8 bit depth conversions for performance testing
+
 length_range = [2**x for x in range(2, 24)]
 
 pwd = os.getcwd()
@@ -70,7 +72,7 @@ for b in bits:
             # print command
 
             tx = time.time()
-            r = envoy.run(command, timeout=10)
+            r = envoy.run(command, timeout=10000)
 
             t_ex = time.time() - tx
             # print "Time taken: ", 
@@ -82,7 +84,8 @@ for b in bits:
             # print r.status_code
             if r.status_code:
                 print "Error: ", r.std_err
-                exit()
+                print "Command: ", r.command
+		exit()
             
             else:
                 writer.writerow([test_process, b, width, height, t_ex])
