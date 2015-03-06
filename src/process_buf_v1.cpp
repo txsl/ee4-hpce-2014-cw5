@@ -358,8 +358,6 @@ int main(int argc, char *argv[])
 				int diff = heightForBuffer - outHeight;
 				for (int i = 0; i < heightForBuffer+1+outHeight; i++) {
 					for (int j = i*w; j < (i+1)*w; j++) {
-						// pixIntermediateBuffer[j] = pixIntermediateBuffer[w*(2*heightForBuffer-i)+j];
-						// fprintf(stderr, "  moving %i to %i\n", w*(2*heightForBuffer-i)+j, j);
 						pixIntermediateBuffer[j] = pixIntermediateBuffer[j + diff*w];
 						fprintf(stderr, "  moving %i to %i\n", j + diff*w, heightForBuffer-diff);
 					}
@@ -382,7 +380,7 @@ int main(int argc, char *argv[])
 		// write the last few lines
 		for (int i = 0; i < heightForBuffer; i++) {
 			fprintf(stderr, "Final heght %i (inputLoc: %i)\n", height, inputLoc);
-			
+
 			pack_blob(w, 1, bits, &pixIntermediateBuffer[w*(heightForBuffer+i+1)], &rawOutputBuffer[0]);
 			write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
 			height++;
