@@ -298,21 +298,89 @@ int main(int argc, char *argv[])
 		
 		uint64_t cbRaw=uint64_t(w)*h*bits/8;
 		std::vector<uint64_t> raw(size_t(cbRaw/8));
+
+
+		// ************ SET UP BUFFER ************
+		int heightForBuffer = std::abs(levels)*2;
+
+		// number of rows to read at one time
+		int numberOfRows = 25;
 		
+		// we will read number of rows + rows below to proccess that chunk. Top will come from somewhere else.
+		uint64_t singleRowBufferSize  = uint64_t(w)*bits/8;
+		uint64_t readBufferSize       = singleRowBufferSize*numberOfRows;
+		std::vector<uint64_t> rawInputBuffer(readBufferSize);
+		std::vector<uint64_t> rawOutputBuffer(readBufferSize);
+
+		uint32_t maxLoc   = (uint64_t(w)*(heightForBuffer*2+numberOfRows));
+		std::vector<uint32_t> pixInputBuffer(maxLoc);
+		std::vector<uint32_t> pixInputBuffer2(maxLoc);
+		std::vector<uint32_t> pixIntermediateBuffer(maxLoc);
+		uint32_t inputLoc = 0;
+		uint32_t interLoc = 0;
+		uint32_t outptLoc = 0;
+
 		std::vector<uint32_t> pixels(w*h);
 		
 		set_binary_io();
+
+
+		//preload the required data:
+		int outHeight = 0;
+		int height = 0;
+
+		// Read in the first heightForBuffer rows to get things rolling...
+		if(!read_blob(STDIN_FILENO, heightForBuffer*singleRowBufferSize, &rawInputBuffer[0]))
+			exit(1);	// This shouldn't ever happen
+
+		unpack_blob(w, heightForBuffer, bits, &rawInputBuffer[0], &pixInputBuffer[0]);	
+		// inputLoc += w * heightForBuffer;
+		height+=heightForBuffer;
+
+		int from = 0; // dirty hack, but needs to be done for now. Represents the row that we start working from.
+		// this is because the first block is a corner, but thereon it's not and the top rows should be ignored.
 		
 		while(1){
-			if(!read_blob(STDIN_FILENO, cbRaw, &raw[0]))
-				break;	// No more images
-			unpack_blob(w, h, bits, &raw[0], &pixels[0]);		
+			if(!read_blob(STDIN_FILENO, readBufferSize, &rawInputBuffer[0]))
+				break;	// No more images			
+			unpack_blob(w, numberOfRows, bits, &rawInputBuffer[0], &pixInputBuffer[w * (heightForBuffer+from)]);
+
+			// fprintf(stderr, "Reading into %i, ending with %i. Output is %i to %i. \n", height, height+numberOfRows );
 			
-			process(levels, w, h, bits, pixels);
-			//invert(w, h, bits, pixels);
-			
-			pack_blob(w, h, bits, &pixels[0], &raw[0]);
-			write_blob(STDOUT_FILENO, cbRaw, &raw[0]);
+			// copy the last of this to the beginning of the next input buffer
+			// int tmp = from - heightForBuffer + numberOfRows;
+			// if (tmp < 0) {
+			// 	tmp = 0;
+			// }
+			for (int i = numberOfRows*w; i < (numberOfRows+heightForBuffer+from)*w; i++) {
+				pixInputBuffer2[i-numberOfRows*w] = pixInputBuffer[i];
+			}
+
+			process(levels, w, heightForBuffer+from+numberOfRows, bits, pixInputBuffer);
+
+			pack_blob(w, numberOfRows, bits, &pixInputBuffer[from*w], &rawOutputBuffer[0]);
+			write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
+
+			std::swap(pixInputBuffer2, pixInputBuffer);
+
+			height+=numberOfRows;
+			outHeight++;
+
+			if (from != heightForBuffer) {
+				from += numberOfRows;
+				if (from > heightForBuffer) {
+					from = heightForBuffer;
+				}
+			}
+		}
+
+		// write the last few lines
+		for (int i = 0; i < heightForBuffer; i++) {
+			fprintf(stderr, "Final heght %i (inputLoc: %i)\n", height, inputLoc);
+
+			pack_blob(w, 1, bits, &pixIntermediateBuffer[w*(heightForBuffer+i+1)], &rawOutputBuffer[0]);
+			write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
+			height++;
 		}
 		
 		return 0;
