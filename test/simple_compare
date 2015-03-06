@@ -36,17 +36,17 @@ if [ $# -eq 1 ]; then
 	fi
 else
 	tput setaf 2;
-	echo "Running test on bin/process_*."
+	echo "Running test on bin/process*."
 	tput sgr0; 	
 	echo "You can speficy a single file to test by running"
 	echo "  ~> $0 <filename>" 
-	files=bin/process_*
+	files=bin/process*
 fi
 
 echo
 echo
 
-convert equine-vets-devon-3.jpg -depth 8 gray:- | ./bin/process 680 250 8 3 > test_output.raw
+convert equine-vets-devon-3.jpg -depth 8 gray:- | ./bin/process_old 680 250 8 3 > test_output.raw
 
 
 for file in $files
@@ -57,7 +57,7 @@ do
 	echo $file
 	tput setaf 0;
 
-	if [[ ! `diff -q -B test_output.raw <(convert equine-vets-devon-3.jpg -depth 8 gray:- | ./$file 680 250 8 3 2>/dev/null)` ]];
+	if [[ ! `diff -q -B test_output.raw <(convert equine-vets-devon-3.jpg -depth 8 gray:- | ./$file 680 250 8 3)` ]];
 	then
 		tput setaf 2; 
 		echo "PASSED"
