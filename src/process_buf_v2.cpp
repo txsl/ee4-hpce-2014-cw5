@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 		int heightForBuffer = std::abs(levels)*2;
 
 		// number of rows to read at one time
-		int numberOfRows = 25;
+		int numberOfRows = 124;
 		
 		// we will read number of rows + rows below to proccess that chunk. Top will come from somewhere else.
 		uint64_t singleRowBufferSize  = uint64_t(w)*bits/8;
@@ -345,15 +345,14 @@ int main(int argc, char *argv[])
 				break;	// No more images			
 			unpack_blob(w, numberOfRows, bits, &rawInputBuffer[0], &pixInputBuffer[w * (heightForBuffer+from)]);
 
-			// fprintf(stderr, "Reading into %i, ending with %i. Output is %i to %i. \n", height, height+numberOfRows );
-			
-			// copy the last of this to the beginning of the next input buffer
-			// int tmp = from - heightForBuffer + numberOfRows;
-			// if (tmp < 0) {
-			// 	tmp = 0;
-			// }
-			for (int i = numberOfRows*w; i < (numberOfRows+heightForBuffer+from)*w; i++) {
-				pixInputBuffer2[i-numberOfRows*w] = pixInputBuffer[i];
+			int tmp = numberOfRows-heightForBuffer+from;
+			if (tmp < 0) {
+				tmp = 0;
+			}
+
+			fprintf(stderr, "Copying from %i to %i -> %i to %i.  \n", tmp, numberOfRows+heightForBuffer+from, tmp-tmp, numberOfRows+heightForBuffer+from-tmp );
+			for (int i = tmp*w; i < (numberOfRows+heightForBuffer+from)*w; i++) {
+				pixInputBuffer2[i-tmp*w] = pixInputBuffer[i];
 			}
 
 			process(levels, w, heightForBuffer+from+numberOfRows, bits, pixInputBuffer);
@@ -372,17 +371,12 @@ int main(int argc, char *argv[])
 					from = heightForBuffer;
 				}
 			}
-		}
 
-		// write the last few lines
-		for (int i = 0; i < heightForBuffer; i++) {
-			fprintf(stderr, "Final heght %i (inputLoc: %i)\n", height, inputLoc);
-
-			pack_blob(w, 1, bits, &pixIntermediateBuffer[w*(heightForBuffer+i+1)], &rawOutputBuffer[0]);
-			write_blob(STDOUT_FILENO, readBufferSize, &rawOutputBuffer[0]);
-			height++;
+			// write the last few lines
 		}
-		
+		pack_blob(w, heightForBuffer, bits, &pixInputBuffer2[(heightForBuffer+numberOfRows)*w], &rawOutputBuffer[0]);
+		write_blob(STDOUT_FILENO, heightForBuffer*singleRowBufferSize, &rawOutputBuffer[0]);
+
 		return 0;
 	}catch(std::exception &e){
 		std::cerr<<"Caught exception : "<<e.what()<<"\n";
