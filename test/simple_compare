@@ -1,0 +1,91 @@
+#!/bin/bash
+
+make all -q
+
+cd "$( dirname "${BASH_SOURCE[0]}" )"/../
+echo
+echo "###########################################"
+echo "############ SIMPLE TEST SUITE ############"
+echo "###########################################"
+echo "# A simple test suite to check the output bit matches the original"
+echo "#"
+echo "# This will NOT test through put or memory issues!"
+echo "###########################################"
+echo
+echo "  ___  ____    __    ____  ____        __     _   "
+echo " / __)(  _ \  /__\  (  _ \( ___)()    /__\  _| |_ "
+echo "( (_-. )   / /(__)\  )(_) ))__)      /(__)\(_   _)"
+echo " \___/(_)\_)(__)(__)(____/(____)()  (__)(__) |_|"
+echo
+echo
+
+
+if [ $# -eq 1 ]; then
+	if [ -e bin/$1 ]; then
+		tput setaf 2;
+		echo "Using bin/$1" 
+		tput sgr0; 	
+		files="bin/"$1
+	else
+		tput setaf 1; 
+		echo "ERROR File bin/$1 doesn't exist"
+		tput sgr0; 	
+		exit
+	fi
+else
+	tput setaf 2;
+	echo "Running test on bin/process_*."
+	tput sgr0; 	
+	echo "You can speficy a single file to test by running"
+	echo "  ~> $0 <filename>" 
+	files=bin/process_*
+fi
+
+echo
+echo
+
+convert equine-vets-devon-3.jpg -depth 8 gray:- | ./bin/process 680 250 8 3 > test_output.raw
+
+
+for file in $files
+do
+	tput sgr0; 	
+	echo -n "Testing against: "
+	tput setaf 1; 
+	echo $file
+	tput setaf 0;
+
+	if [[ ! `diff -q -B test_output.raw <(convert equine-vets-devon-3.jpg -depth 8 gray:- | ./$file 680 250 8 3 2>/dev/null)` ]];
+	then
+		tput setaf 2; 
+		echo "PASSED"
+	else
+		tput setaf 1; 
+		echo "FAILED"
+	fi
+	tput sgr0; 	
+	echo
+done
+
+
+	# if [ "$0" != "$file" ]; then
+	# 	tput sgr0; 	
+	# 	echo -n "Running: "
+	# 	tput setaf 1; 
+	# 	echo $file
+	# 	tput setaf 0; 	
+		
+
+	# 	fileout=`$file`
+	# 	echo $fileout | grep -q ' PASSED:'
+	# 	if [[ $? -eq 0 ]] ;
+	# 	then
+	# 		tput setaf 2; 
+	# 		echo $fileout
+	# 	else
+	# 		tput setaf 1; 
+	# 		echo $fileout
+	# 	fi
+	# 	tput sgr0; 	
+	# 	echo
+	# fi

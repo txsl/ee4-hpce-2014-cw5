@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
 
 
 
-		std::string kernelSource=LoadSource("process_v2.cl");
+		std::string kernelSource=LoadSource("process_ocl_v2.cl");
 
 		cl::Program::Sources sources;   // A vector of (data,length) pairs
 		sources.push_back(std::make_pair(kernelSource.c_str(), kernelSource.size()+1)); // push on our single string
