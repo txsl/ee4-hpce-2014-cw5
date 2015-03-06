@@ -20,16 +20,16 @@ bin/process_ocl_v2 : src/process_ocl_v2_open_cl.cpp
 
 
 
-bin/process_prlrl_v1 : src/process_prlel_v1.cpp
+bin/process_buf_v1 : src/process_buf_v1.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
 
-bin/process_prlrl_v2 : src/process_prlel_v2.cpp
+bin/process_buf_v2 : src/process_buf_v2.cpp
 	$(CXX) $^ -o $@ $(CPPFLAGS) $(LDFLAGS) $(LDLIBS)
 
 
 
 
-all : bin/process bin/process_ocl_v1_1 bin/process_ocl_v1_2 bin/process_ocl_v2 bin/process_prlrl_v1 bin/process_prlrl_v2
+all : bin/process bin/process_ocl_v1_1 bin/process_ocl_v1_2 bin/process_ocl_v2 bin/process_buf_v1 bin/process_buf_v2
 
 build_test: bin/test_opencl
 
