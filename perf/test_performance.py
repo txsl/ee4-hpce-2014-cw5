@@ -12,6 +12,8 @@ def fname_gen(width, height, bits):
     return "img/input_{0}_{1}_{2}.raw".format(width, height, bits)
 
 bits = [2**x for x in range(0, 6)]
+bits = [1,8] # Since we are only interested in 1 or 8 bit depth conversions for performance testing
+
 length_range = [2**x for x in range(2, 24)]
 
 pwd = os.getcwd()
@@ -65,23 +67,26 @@ for b in bits:
                 envoy.run('convert big.jpg -resize {0}x{1}\! -depth {2} gray:{3}'.format(width, height, b, fname))
                 # print 'convert big.jpg -resize {0}x{1}\! -depth {2} gray:{3}'.format(width, height, b, fname)
 
-            command = "cat {0} | ../bin/{5} {1} {2} {3} {4}".format(fname, width, height, b, 8, test_process)
+            # command = "cat {0} | ../bin/{5} {1} {2} {3} {4}".format(fname, width, height, b, 8, test_process)
+            command = "../bin/{0} {1} {2} {3} {4}".format(test_process, width, height, b, 8)
             
             # print command
 
+            
+            # fhandle = open(fname, 'rb')
+            with open(fname, mode='rb') as file: # b is important -> binary
+                file_data = file.read()
+            
             tx = time.time()
-            r = envoy.run(command, timeout=10)
+            r = envoy.run(command, timeout=10000, data=file_data)
+
+            print r.command
 
             t_ex = time.time() - tx
-            # print "Time taken: ", 
-            
-            # print r.std_err
 
-            # print r.std_out
-
-            # print r.status_code
             if r.status_code:
                 print "Error: ", r.std_err
+                print "Command: ", r.command
                 exit()
             
             else:
