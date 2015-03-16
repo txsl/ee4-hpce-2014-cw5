@@ -1,0 +1,11 @@
+Installation
+============
+
+Bootstrap works correctly, no problems.
+
+Compilation
+===========
+
+Compiles first time (with some warnings).
+
+Executes on a test stream first time.
