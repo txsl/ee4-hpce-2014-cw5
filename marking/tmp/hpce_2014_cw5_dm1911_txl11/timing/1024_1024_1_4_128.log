@@ -1,0 +1,20 @@
+Setting CPU time limit = 300 seconds.
+Setting memlimit = 0 bytes.
+[TimingInfo] width=1024, height=1024, bitsPerPixel=1, levels=4, frames=128
+[TimingInfo] batchSize=4096, batchCount=4096, windowCount=1
+[TimingInfo] imageSze=131072, streamSize=16777216
+  batchCount=4096, windowCount=1
+.[test_timing] Spawning child[child] Set cpuLimit to 300.
+Processing 1024 x 1024 image with 1 bits per pixel.
+Found 2 platforms
+  Platform 0 : NVIDIA Corporation
+  Platform 1 : Advanced Micro Devices, Inc.
+Choosing platform 0
+Found 1 devices
+  Device 0 : GRID K520
+Choosing device 0
+Kernel Done.
+[reader] Read todo=14240512 (frame=108), done=2536704, prop=109951162777515.906%, elapsed=5.00, estSecs=0.00
+[reader] Read todo=10754816 (frame=82), done=6022400, prop=109951162777536.688%, elapsed=11.50, estSecs=0.00
+[reader] Read todo=6229248 (frame=47), done=10547968, prop=109951162777563.641%, elapsed=19.95, estSecs=0.00
+[reader] Read todo=341888 (frame=2), done=16435328, prop=109951162777598.750%, elapsed=30.94, estSecs=0.00

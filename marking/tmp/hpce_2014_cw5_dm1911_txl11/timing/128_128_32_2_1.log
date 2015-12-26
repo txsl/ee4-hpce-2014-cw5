@@ -1,0 +1,8 @@
+Setting CPU time limit = 300 seconds.
+Setting memlimit = 0 bytes.
+[TimingInfo] width=128, height=128, bitsPerPixel=32, levels=2, frames=1
+[TimingInfo] batchSize=4096, batchCount=16, windowCount=1
+[TimingInfo] imageSze=65536, streamSize=65536
+  batchCount=16, windowCount=1
+.[test_timing] Spawning child[child] Set cpuLimit to 300.
+Processing 128 x 128 image with 32 bits per pixel.

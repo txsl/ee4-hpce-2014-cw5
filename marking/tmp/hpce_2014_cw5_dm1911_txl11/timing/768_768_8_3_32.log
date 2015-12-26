@@ -1,0 +1,9 @@
+Setting CPU time limit = 300 seconds.
+Setting memlimit = 0 bytes.
+[TimingInfo] width=768, height=768, bitsPerPixel=8, levels=3, frames=32
+[TimingInfo] batchSize=4096, batchCount=4608, windowCount=2
+[TimingInfo] imageSze=589824, streamSize=18874368
+  batchCount=4608, windowCount=2
+.[test_timing] Spawning child[child] Set cpuLimit to 300.
+Processing 768 x 768 image with 8 bits per pixel.
+[reader] Read todo=2461696 (frame=4), done=16412672, prop=97734366913412.312%, elapsed=5.00, estSecs=0.00
